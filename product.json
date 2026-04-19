@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "produkt-bild": "images/tshirt.jpg",
+    "produkt-name": "Produkt 1",
+    "produkt-status": "verfüfbar",
+    "produkt-beschreibung": "Das ist ein sehr schönes Produkt...",
+    "lagerungshinweis": "Bitte trocken lagern.",
+    "zubereitungstipps": "Ideal für italienische Gerichte.",
+    "optionen": [
+      { "gramm": 25, "preis": 2.00, "stock": 10 },
+      { "gramm": 50, "preis": 2.50, "stock": 10 },
+      { "gramm": 75, "preis": 2.90, "stock": 10 },
+      { "gramm": 100, "preis": 4.30, "stock": 10 }
+    ]
+  }
+]

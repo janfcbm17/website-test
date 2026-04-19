@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { font-family: "Rubik", sans-serif; }
+        body { margin: 0; display: flex; flex-direction: column; height: 100vh; background: #fff; }
+        #header { background: #667744; color: #F5E6D3; padding: 15px; font-weight: bold; text-align: center; }
+        #info { font-size: 0.5rem; }
+        #chatbox { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 14px; background-color: #F5E6D3; }
+        #input-area { display: flex; border-top: 1px solid #667744; padding: 10px; background-color: #F5E6D3; }
+        input::placeholder { color: #667744; opacity: 1; }
+        input { flex: 1; border: 1px solid #667744; background-color: #F5E6D3; color: #667744; padding: 8px; border-radius: 5px; outline: none; font-size: 1.001rem; }
+        button { background: #667744; color: #F5E6D3; padding: 8px 15px; margin-left: 5px; border-radius: 5px; cursor: pointer; border: 1px solid #F5E6D3; }
+        button:disabled { background: #aaa; cursor: not-allowed; }
+        .msg { padding: 8px 12px; border-radius: 10px; max-width: 80%; }
+        .user { background: #667744; color: #F5E6D3; align-self: flex-end; }
+        .ai { background: #667744; color: #F5E6D3; align-self: flex-start; }
+        .error { background: rgb(218, 145, 145); color: #c0392b; align-self: flex-start; }
+        .typing { color: #F5E6D3; }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Rubik:ital,wght@0,300..900;1,300..900&family=Slabo+27px&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div id="header">
+    <div>Chatten Sie jetzt mit Kurti.</div>
+    <div id="info">KI kann Fehler machen. Prüfen Sie die Antworten.</div>
+</div>
+<div id="chatbox">
+    <div class="msg ai">Hallo! Ich bin Kurti und beantworte Ihnen alle Ihre Fragen rund um Kräuter und Jans Kräuterladen. Ich kann Ihnen auch Tipps geben, Sie über Wirkungsweisen informieren und Zubereitungs&shy;hinweise geben.</div>
+</div>
+<div id="input-area">
+    <input type="text" id="userInput" placeholder="Frage eingeben..." onkeypress="if(event.key === 'Enter') senden()">
+    <button id="sendBtn" onclick="senden()">Senden</button>
+</div>
+
+<script>
+    // Fehlercodes → Kurtis Texte
+    const FEHLER = {
+        LIMIT:   "Kurti ist müde und erst morgen wieder verfügbar. 😴",
+        AUTH:    "Kurti hat den Schlüssel zu seinem Modell verloren. 🔑",
+        NETWORK: "Kurti hat die Internetverbindung verloren. 🌐",
+        JSON:    "Kurti hat den Schlüssel zum Lager verloren. 🗝️",
+        ERROR:   "Kurti hat ein ungewohntes Problem und ist vorübergehend nicht verfügbar. 🌿"
+    };
+
+    // Supabase Edge Function URL – hier deine URL eintragen
+    const FUNCTION_URL = "https://iydsqjtkokkcbxdrwaav.supabase.co/functions/v1/chat";
+
+    async function senden() {
+        const input   = document.getElementById("userInput");
+        const chatbox = document.getElementById("chatbox");
+        const sendBtn = document.getElementById("sendBtn");
+        const text    = input.value.trim();
+        if (!text) return;
+
+        // Nutzernachricht anzeigen
+        const userMsg = document.createElement("div");
+        userMsg.className = "msg user";
+        userMsg.textContent = text;
+        chatbox.appendChild(userMsg);
+
+        input.value = "";
+        input.disabled = true;
+        sendBtn.disabled = true;
+
+        // Tipp-Indikator
+        const typing = document.createElement("div");
+        typing.className = "msg ai typing";
+        typing.textContent = "Kurti schreibt...";
+        chatbox.appendChild(typing);
+        chatbox.scrollTop = chatbox.scrollHeight;
+
+        function removeTyping() {
+            if (typing.parentNode === chatbox) chatbox.removeChild(typing);
+        }
+        function entsperren() {
+            input.disabled = false;
+            sendBtn.disabled = false;
+            input.focus();
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+        function zeigeNachricht(text, typ) {
+            const el = document.createElement("div");
+            el.className = "msg " + typ;
+            el.innerHTML = text.replace(/\n/g, "<br>");
+            chatbox.appendChild(el);
+        }
+
+        try {
+            const response = await fetch(FUNCTION_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: text })
+            });
+
+            let data;
+            try { data = await response.json(); } catch {
+                removeTyping();
+                zeigeNachricht(FEHLER.ERROR, "error");
+                entsperren();
+                return;
+            }
+
+            removeTyping();
+
+            if (!response.ok || data.fehler) {
+                zeigeNachricht(FEHLER[data.fehler] || FEHLER.ERROR, "error");
+            } else {
+                zeigeNachricht(data.reply, "ai");
+            }
+
+        } catch {
+            removeTyping();
+            zeigeNachricht(FEHLER.NETWORK, "error");
+        }
+
+        entsperren();
+    }
+</script>
+
+</body>
+</html>
