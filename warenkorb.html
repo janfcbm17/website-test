@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <title>Warenkorb – Jans Kräuterladen</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Rubik:ital,wght@0,300..900;1,300..900&family=Slabo+27px&display=swap" rel="stylesheet">
+    <style>
+        .page-wrap { padding: 24px 12px 50px; color: var(--color-1); max-width: 800px; margin: 0 auto; }
+        .page-wrap h1 { font-size: 1.6rem; font-weight: 500; margin-bottom: 20px; }
+
+        /* EMPTY */
+        .empty-state { text-align: center; padding: 4rem 1rem; opacity: 0.65; }
+        .empty-state p { margin-bottom: 16px; font-size: 0.9rem; }
+
+        /* CART ITEMS */
+        .cart-item {
+            display: grid;
+            grid-template-columns: 64px 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(167,146,119,0.25);
+        }
+        .cart-thumb {
+            width: 64px; height: 64px;
+            border-radius: 5px; border: 1px solid rgba(167,146,119,0.3);
+            overflow: hidden; background: var(--color-2);
+        }
+        .cart-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+        .cart-item-info { display: flex; flex-direction: column; gap: 3px; }
+        .cart-item-name { font-weight: 500; font-size: 0.92rem; }
+        .cart-item-opt { font-size: 0.78rem; opacity: 0.6; }
+        .cart-item-price { font-size: 0.85rem; opacity: 0.7; margin-top: 2px; }
+
+        .remove-btn {
+            background: none; border: none; cursor: pointer;
+            font-family: "Rubik", sans-serif; font-size: 0.72rem;
+            color: var(--color-1); opacity: 0.45;
+            padding: 0; text-decoration: underline; text-underline-offset: 2px;
+            transition: opacity 0.2s;
+        }
+        .remove-btn:hover { opacity: 1; }
+
+        .cart-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .line-total { font-weight: 500; font-size: 0.92rem; }
+
+        .qty-control {
+            display: flex; align-items: center;
+            border: 1px solid rgba(167,146,119,0.4);
+            border-radius: 5px; overflow: hidden;
+        }
+        .qty-btn {
+            width: 28px; height: 28px; border: none; background: var(--color-2);
+            font-size: 0.9rem; cursor: pointer; color: var(--color-1);
+            transition: background 0.15s; font-family: "Rubik", sans-serif;
+        }
+        .qty-btn:hover { background: var(--color-1); color: var(--color-2); }
+        .qty-num {
+            width: 36px; height: 28px; border: none;
+            border-left: 1px solid rgba(167,146,119,0.3);
+            border-right: 1px solid rgba(167,146,119,0.3);
+            background: #fff; text-align: center;
+            font-family: "Rubik", sans-serif; font-size: 0.82rem; font-weight: 500; color: var(--color-1);
+        }
+
+        /* SUMMARY */
+        .cart-summary {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(167,146,119,0.4);
+            display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+        }
+        .summary-row { display: flex; gap: 40px; font-size: 0.85rem; opacity: 0.7; }
+        .summary-row.total { font-weight: 500; font-size: 0.95rem; opacity: 1; }
+
+        .checkout-btn {
+            margin-top: 8px; padding: 11px 28px;
+            background: var(--color-1); color: var(--color-2);
+            border: none; border-radius: 5px;
+            font-family: "Rubik", sans-serif; font-size: 0.85rem; font-weight: 500;
+            cursor: pointer; text-decoration: none; display: inline-block;
+            transition: opacity 0.2s;
+        }
+        .checkout-btn:hover { opacity: 0.85; color: var(--color-2); }
+
+        .back-link {
+            display: inline-block; margin-top: 16px;
+            font-size: 0.82rem; opacity: 0.65;
+            text-decoration: underline; text-underline-offset: 2px;
+        }
+        .back-link:hover { opacity: 1; }
+
+        @media (min-width: 900px) {
+            .page-wrap { padding: 28px 50px 60px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav>
+        <div class="nav-logo">Jans Kräuterladen</div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="index.html">Kontakt</a>
+            <a href="shop.html">Shop</a>
+            <a href="warenkorb.html" class="underlined">Warenkorb</a>
+        </div>
+    </nav>
+</header>
+
+<main>
+    <div class="page-wrap">
+        <h1>Warenkorb</h1>
+
+        <div id="emptyState" class="empty-state" style="display:none">
+            <p>Ihr Warenkorb ist leer.</p>
+            <a href="shop.html" class="checkout-btn">Zum Shop</a>
+        </div>
+
+        <div id="cartContent" style="display:none">
+            <div id="cartItems"></div>
+
+            <div class="cart-summary">
+                <div class="summary-row"><span>Zwischensumme</span><span id="subtotal">–</span></div>
+                <div class="summary-row"><span>Versand</span><span>wird berechnet</span></div>
+                <div class="summary-row total"><span>Gesamt</span><span id="total">–</span></div>
+                <a href="checkout.html" class="checkout-btn">Zur Kasse →</a>
+            </div>
+
+            <a href="shop.html" class="back-link">← Weiter einkaufen</a>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <div class="footer-logo">Jans Kräuterladen</div>
+    <div class="footer-links">
+        <a href="datenschutzerklärung.html">Datenschutzerklärung</a>
+        <a href="impressum.html">Impressum</a>
+        <a href="AGB.html">AGB</a>
+        <a href="widerrufsbelehrung.html">Widerrufsbelehrung</a>
+    </div>
+    <div class="footer-copyright">&copy; 2026 Jans Kräuterladen</div>
+</footer>
+
+<script>
+const SUPABASE_URL = 'https://iydsqjtkokkcbxdrwaav.supabase.co';
+const BUCKET = 'produkte';
+
+function getCart() { return JSON.parse(localStorage.getItem('kraeuterladen_cart') || '[]'); }
+function saveCart(c) { localStorage.setItem('kraeuterladen_cart', JSON.stringify(c)); }
+function imageUrl(p) { return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${p}`; }
+function fmt(n) { return n.toFixed(2).replace('.', ',') + ' €'; }
+function optLabel(v) { return v <= 5 ? `${v} Stück` : `${v} g`; }
+
+function render() {
+    const cart = getCart();
+    if (!cart.length) {
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('cartContent').style.display = 'none';
+        return;
+    }
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('cartContent').style.display = 'block';
+
+    const container = document.getElementById('cartItems');
+    container.innerHTML = '';
+    let subtotal = 0;
+
+    cart.forEach((item, idx) => {
+        const line = item.preis * item.menge;
+        subtotal += line;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+            <div class="cart-thumb">
+                <img src="${imageUrl(item.bild)}" alt="${item.name}" onerror="this.style.display='none'" />
+            </div>
+            <div class="cart-item-info">
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-opt">${optLabel(item.option)}</div>
+                <div class="cart-item-price">${fmt(item.preis)} / Einheit</div>
+                <button class="remove-btn" data-idx="${idx}">Entfernen</button>
+            </div>
+            <div class="cart-item-right">
+                <div class="line-total">${fmt(line)}</div>
+                <div class="qty-control">
+                    <button class="qty-btn" data-action="minus" data-idx="${idx}">−</button>
+                    <input class="qty-num" value="${item.menge}" readonly />
+                    <button class="qty-btn" data-action="plus" data-idx="${idx}">+</button>
+                </div>
+            </div>`;
+        container.appendChild(div);
+    });
+
+    document.getElementById('subtotal').textContent = fmt(subtotal);
+    document.getElementById('total').textContent = fmt(subtotal);
+
+    container.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const c = getCart(); c.splice(+btn.dataset.idx, 1); saveCart(c); render();
+        });
+    });
+    container.querySelectorAll('.qty-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const c = getCart(); const i = +btn.dataset.idx;
+            if (btn.dataset.action === 'minus') c[i].menge = Math.max(1, c[i].menge - 1);
+            else c[i].menge++;
+            saveCart(c); render();
+        });
+    });
+}
+
+render();
+</script>
+</body>
+</html>
